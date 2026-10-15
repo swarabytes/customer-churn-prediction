@@ -163,9 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     payload[key] = parseFloat(value);
                 }
             });
-            // Ensure model_type is present even if not in FormData
-            if (!payload.model_type) {
-                payload.model_type = document.getElementById('model_type')?.value || 'logistic_regression';
+            // Ensure model_type is present if an explicit selector exists, or default cleanly
+            if (document.getElementById('model_type')) {
+                payload.model_type = document.getElementById('model_type').value;
             }
 
             const btnPredict = document.getElementById('btn-predict');
