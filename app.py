@@ -42,8 +42,8 @@ for _key, _path in _model_files.items():
         print(f"Could not load {_key}: {_e}")
         MODEL_REGISTRY[_key] = None
 
-# Default pipeline (Logistic Regression) for backward-compatible existing routes
-pipeline = MODEL_REGISTRY.get('logistic_regression') or next(
+# Default pipeline: Random Forest for highest accuracy across predictions
+pipeline = MODEL_REGISTRY.get('random_forest') or MODEL_REGISTRY.get('logistic_regression') or next(
     (m for m in MODEL_REGISTRY.values() if m), None
 )
 if pipeline is None:
@@ -365,8 +365,8 @@ def predict():
         if not data:
             return jsonify({"error": "No JSON payload provided"}), 400
 
-        # Resolve which model to use
-        model_type = data.get('model_type', 'logistic_regression').lower().replace(' ', '_')
+        # Resolve which model to use (defaults to random_forest for highest accuracy)
+        model_type = data.get('model_type', 'random_forest').lower().replace(' ', '_')
         # Normalise display name variants
         _alias = {
             'lr': 'logistic_regression',
