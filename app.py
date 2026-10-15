@@ -200,77 +200,78 @@ def bulk_upload():
             total_prob = 0.0
             rev_at_risk = 0.0
             
-            if pipeline is None:
-                return jsonify({"error": "Model not loaded. Please ensure pipeline.pkl exists."}), 500
-            
+            active_pipe = pipeline
+            if active_pipe is None:
+                return jsonify({"error": "Model not loaded. Please ensure models exist."}), 500
+
             company_id = session['company_id']
+
+            # Vectorized data conversion & missing-value safety
+            feature_df = df[required_cols].copy().apply(pd.to_numeric, errors='coerce').fillna(0.0)
             
-            for index, row in df.iterrows():
-                try:
-                    features = {col: float(row[col]) for col in required_cols}
-                    df_input = pd.DataFrame([features])
-                    prediction_array = pipeline.predict(df_input)
-                    prediction = int(prediction_array[0])
-                    probability = float(pipeline.predict_proba(df_input)[0][1])
-                    
-                    if probability < 0.3:
-                        risk_level = "Low"
-                        low_risk += 1
-                    elif 0.3 <= probability <= 0.7:
-                        risk_level = "Medium"
-                        medium_risk += 1
+            # Fast vectorized prediction across entire batch in one pass
+            preds = active_pipe.predict(feature_df)
+            probs = active_pipe.predict_proba(feature_df)[:, 1]
+
+            records_to_insert = []
+            for i, (pred, prob) in enumerate(zip(preds, probs)):
+                row_features = {col: float(feature_df.iloc[i][col]) for col in required_cols}
+                p_churn = float(prob)
+                p_pred = int(pred)
+
+                if p_churn < 0.3:
+                    risk_level = "Low"
+                    low_risk += 1
+                elif p_churn <= 0.7:
+                    risk_level = "Medium"
+                    medium_risk += 1
+                else:
+                    risk_level = "High"
+                    high_risk += 1
+                    rev_at_risk += row_features['monetary']
+
+                total_prob += p_churn
+
+                cust_id = str(df.iloc[i].get('customer_id', ''))
+                if not cust_id or pd.isna(df.iloc[i].get('customer_id')) or cust_id.strip() == 'nan':
+                    cust_id = f"CUST_{str(uuid.uuid4())[:8].upper()}"
+
+                health_score = round((1.0 - p_churn) * 100, 1)
+
+                if risk_level == "High":
+                    if row_features['monetary'] > 500:
+                        action = "Direct VIP outreach & retention incentive"
+                    elif row_features['inactivity_days'] > 60:
+                        action = "Send targeted win-back email campaign"
+                    elif row_features['average_review_score'] < 3.5:
+                        action = "Proactive customer success resolution call"
+                    elif row_features['frequency'] <= 1:
+                        action = "Deploy second-purchase incentive offer"
                     else:
-                        risk_level = "High"
-                        high_risk += 1
-                        rev_at_risk += features['monetary']
-                        
-                    total_prob += probability
-                    
-                    cust_id = str(row.get('customer_id', ''))
-                    if not cust_id or pd.isna(row.get('customer_id')) or cust_id.strip() == 'nan':
-                        cust_id = f"CUST_{str(uuid.uuid4())[:8].upper()}"
-                        
-                    health_score = round((1.0 - probability) * 100, 1)
-                    
-                    if risk_level == "High":
-                        if features['monetary'] > 500:
-                            action = "Direct VIP outreach & retention incentive"
-                        elif features['inactivity_days'] > 60:
-                            action = "Send targeted win-back email campaign"
-                        elif features['average_review_score'] < 3.5:
-                            action = "Proactive customer success resolution call"
-                        elif features['frequency'] <= 1:
-                            action = "Deploy second-purchase incentive offer"
-                        else:
-                            action = "Immediate churn prevention intervention"
-                    elif risk_level == "Medium":
-                        if features['inactivity_days'] > 30:
-                            action = "Trigger re-engagement reminder"
-                        else:
-                            action = "Promotional campaign & product recommendation"
+                        action = "Immediate churn prevention intervention"
+                elif risk_level == "Medium":
+                    if row_features['inactivity_days'] > 30:
+                        action = "Trigger re-engagement reminder"
                     else:
-                        if features['frequency'] >= 3:
-                            action = "Loyalty rewards & referral invitation"
-                        else:
-                            action = "Standard customer engagement"
-                        
-                    db.insert_prediction(
-                        company_id=company_id,
-                        customer_id=cust_id,
-                        data=features,
-                        prediction=prediction,
-                        probability=probability,
-                        risk_level=risk_level,
-                        batch_id=batch_id,
-                        source_file=file.filename,
-                        upload_mode="bulk",
-                        health_score=health_score,
-                        recommendation=action
-                    )
-                    valid_rows += 1
-                except Exception as row_error:
-                    invalid_rows += 1
-                    
+                        action = "Promotional campaign & product recommendation"
+                else:
+                    if row_features['frequency'] >= 3:
+                        action = "Loyalty rewards & referral invitation"
+                    else:
+                        action = "Standard customer engagement"
+
+                records_to_insert.append((
+                    company_id, cust_id, row_features['recency'], row_features['frequency'],
+                    row_features['monetary'], row_features['average_order_value'],
+                    row_features['category_diversity'], row_features['average_review_score'],
+                    row_features['payment_count'], row_features['delivery_delay'],
+                    row_features['inactivity_days'], p_pred, p_churn, risk_level,
+                    batch_id, file.filename, "bulk", health_score, action
+                ))
+                valid_rows += 1
+
+            # Atomic single-transaction bulk insert
+            db.insert_predictions_batch(records_to_insert)
             avg_prob = (total_prob / valid_rows) if valid_rows > 0 else 0
             
             return jsonify({

@@ -156,6 +156,29 @@ def insert_prediction(company_id, customer_id, data, prediction, probability, ri
     finally:
         conn.close()
 
+def insert_predictions_batch(rows_tuples):
+    """Bulk insert predictions using executemany in a single transaction for maximum speed."""
+    if not rows_tuples:
+        return
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.executemany('''
+            INSERT INTO predictions (
+                company_id, customer_id, recency, frequency, monetary, average_order_value,
+                category_diversity, average_review_score, payment_count,
+                delivery_delay, inactivity_days, prediction, probability, risk_level,
+                batch_id, source_file, upload_mode, health_score, recommendation
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', rows_tuples)
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error during batch insertion: {e}")
+        raise e
+    finally:
+        conn.close()
+
 def get_all_predictions(company_id):
     conn = get_db_connection()
     try:
