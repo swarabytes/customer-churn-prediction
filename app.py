@@ -608,4 +608,5 @@ def server_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # use_reloader=False prevents Windows thread crash during background module checks
+    app.run(debug=True, use_reloader=False, host='127.0.0.1', port=5000)
