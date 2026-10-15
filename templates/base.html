@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered e-commerce customer intelligence and churn risk prediction platform.">
+    <title>NexIQ — E-Commerce Customer Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Loading Overlay (managed by JS) -->
+    <div class="loader-overlay" id="global-loader">
+        <div class="loader-spinner"></div>
+        <span class="loader-text">Loading...</span>
+    </div>
+
+    <!-- Toast Container (managed by JS) -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <nav class="navbar">
+        <a href="/" class="nav-brand-link" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
+            <div class="nav-brand">Nex<span class="brand-accent">IQ</span></div>
+            <span class="nav-enterprise-tag">ML Analytics</span>
+        </a>
+        <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation">☰</button>
+        <ul class="nav-links" id="nav-links-menu">
+            <li><a href="/" class="nav-link-item {% if request.path == '/' %}active{% endif %}">Home</a></li>
+            {% if session.get('company_id') %}
+            <li><a href="/predict_ui" class="nav-link-item {% if request.path == '/predict_ui' %}active{% endif %}">Predict</a></li>
+            <li><a href="/bulk-upload" class="nav-link-item {% if request.path == '/bulk-upload' %}active{% endif %}">Bulk Upload</a></li>
+            <li><a href="/dashboard" class="nav-link-item {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a></li>
+            <li><a href="/models-comparison" class="nav-link-item {% if request.path == '/models-comparison' %}active{% endif %}">Model Comparison</a></li>
+            <li class="nav-user-chip">
+                <span class="nav-user-avatar">{{ session.get('company_name', 'C')[0]|upper }}</span>
+                <span class="nav-user-name">{{ session.get('company_name', 'Company') }}</span>
+                <a href="/logout" class="nav-logout-btn" title="Sign out">Logout</a>
+            </li>
+            {% else %}
+            <li><a href="/login" class="nav-login-btn">Login / Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

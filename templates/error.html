@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block page_title %}Service Exception{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 5rem 2rem;">
+    <div style="font-size: 5rem; color: var(--danger); margin-bottom: 2rem; opacity: 0.8;">
+        <i class="fa-solid fa-circle-exclamation"></i>
+    </div>
+    
+    <h2 style="margin-bottom: 1rem;">Oops! Something went wrong.</h2>
+    
+    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.6;">
+        {{ message if message else "We encountered an unexpected error while processing your request. Our intelligence team has been notified." }}
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="{{ url_for('dashboard') }}" class="btn">
+            <i class="fa-solid fa-chart-line" style="margin-right: 0.5rem;"></i> Back to Dashboard
+        </a>
+        <a href="javascript:location.reload();" class="btn btn-secondary">
+            <i class="fa-solid fa-rotate" style="margin-right: 0.5rem;"></i> Retry Request
+        </a>
+    </div>
+</div>
+
+<div class="intelligence-box" style="margin-top: 2rem; border-left: 4px solid var(--warning);">
+    <h3><i class="fa-solid fa-bug"></i> Technical Diagnostics</h3>
+    <p style="font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.05); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+        Error Context: [Internal Server Error at {{ request.path }}]
+    </p>
+</div>
+{% endblock %}

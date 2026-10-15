@@ -1,0 +1,193 @@
+{
+  "timestamp": "2026-10-15 11:34:20",
+  "dataset_rows": 75320,
+  "features": [
+    "recency",
+    "frequency",
+    "monetary",
+    "average_order_value",
+    "category_diversity",
+    "average_review_score",
+    "payment_count",
+    "delivery_delay",
+    "inactivity_days"
+  ],
+  "split": {
+    "train_size": 60256,
+    "test_size": 15064,
+    "train_churn": 59919,
+    "train_retained": 337,
+    "test_churn": 14980,
+    "test_retained": 84
+  },
+  "models": {
+    "Logistic Regression": {
+      "accuracy": 0.6055,
+      "roc_auc": 0.6124,
+      "pr_auc_churn": 0.9958,
+      "pr_auc_retained": 0.0129,
+      "f1_macro": 0.3843,
+      "f1_weighted": 0.7493,
+      "churn_class_1": {
+        "precision": 0.9958,
+        "recall": 0.6059,
+        "f1": 0.7534,
+        "support": 14980
+      },
+      "retained_class_0": {
+        "precision": 0.0077,
+        "recall": 0.5476,
+        "f1": 0.0152,
+        "support": 84
+      },
+      "confusion_matrix": {
+        "TN": 46,
+        "FP": 38,
+        "FN": 5904,
+        "TP": 9076
+      },
+      "classification_report": {
+        "0": {
+          "precision": 0.00773109243697479,
+          "recall": 0.5476190476190477,
+          "f1-score": 0.015246934040437522,
+          "support": 84.0
+        },
+        "1": {
+          "precision": 0.9958305903006364,
+          "recall": 0.6058744993324433,
+          "f1-score": 0.7533825848759027,
+          "support": 14980.0
+        },
+        "accuracy": 0.6055496548061604,
+        "macro avg": {
+          "precision": 0.5017808413688056,
+          "recall": 0.5767467734757454,
+          "f1-score": 0.3843147594581701,
+          "support": 15064.0
+        },
+        "weighted avg": {
+          "precision": 0.9903207417995378,
+          "recall": 0.6055496548061604,
+          "f1-score": 0.7492665868229169,
+          "support": 15064.0
+        }
+      },
+      "training_time_seconds": 0.137,
+      "balancing_strategy": "StandardScaler + class_weight='balanced'",
+      "model_path": "C:\\Users\\EIS\\Downloads\\ML PROJECT\\churn-predict-main\\models\\logistic_regression.joblib"
+    },
+    "Random Forest": {
+      "accuracy": 0.9792,
+      "roc_auc": 0.5124,
+      "pr_auc_churn": 0.9944,
+      "pr_auc_retained": 0.0067,
+      "f1_macro": 0.5041,
+      "f1_weighted": 0.9841,
+      "churn_class_1": {
+        "precision": 0.9945,
+        "recall": 0.9844,
+        "f1": 0.9895,
+        "support": 14980
+      },
+      "retained_class_0": {
+        "precision": 0.0127,
+        "recall": 0.0357,
+        "f1": 0.0187,
+        "support": 84
+      },
+      "confusion_matrix": {
+        "TN": 3,
+        "FP": 81,
+        "FN": 233,
+        "TP": 14747
+      },
+      "classification_report": {
+        "0": {
+          "precision": 0.012711864406779662,
+          "recall": 0.03571428571428571,
+          "f1-score": 0.01875,
+          "support": 84.0
+        },
+        "1": {
+          "precision": 0.9945373617480442,
+          "recall": 0.9844459279038719,
+          "f1-score": 0.9894659151905528,
+          "support": 14980.0
+        },
+        "accuracy": 0.9791556027615507,
+        "macro avg": {
+          "precision": 0.5036246130774119,
+          "recall": 0.5100801068090788,
+          "f1-score": 0.5041079575952764,
+          "support": 15064.0
+        },
+        "weighted avg": {
+          "precision": 0.9890624983799703,
+          "recall": 0.9791556027615507,
+          "f1-score": 0.9840530011653268,
+          "support": 15064.0
+        }
+      },
+      "training_time_seconds": 2.982,
+      "balancing_strategy": "class_weight='balanced', constrained tree depth (max_depth=10)",
+      "model_path": "C:\\Users\\EIS\\Downloads\\ML PROJECT\\churn-predict-main\\models\\random_forest.joblib"
+    },
+    "XGBoost": {
+      "accuracy": 0.7511,
+      "roc_auc": 0.5598,
+      "pr_auc_churn": 0.9953,
+      "pr_auc_retained": 0.0096,
+      "f1_macro": 0.4356,
+      "f1_weighted": 0.8529,
+      "churn_class_1": {
+        "precision": 0.9949,
+        "recall": 0.7536,
+        "f1": 0.8576,
+        "support": 14980
+      },
+      "retained_class_0": {
+        "precision": 0.007,
+        "recall": 0.3095,
+        "f1": 0.0137,
+        "support": 84
+      },
+      "confusion_matrix": {
+        "TN": 26,
+        "FP": 58,
+        "FN": 3691,
+        "TP": 11289
+      },
+      "classification_report": {
+        "0": {
+          "precision": 0.006994888350820554,
+          "recall": 0.30952380952380953,
+          "f1-score": 0.013680610365693239,
+          "support": 84.0
+        },
+        "1": {
+          "precision": 0.9948885167885785,
+          "recall": 0.7536048064085448,
+          "f1-score": 0.857598662969575,
+          "support": 14980.0
+        },
+        "accuracy": 0.7511285183218269,
+        "macro avg": {
+          "precision": 0.5009417025696995,
+          "recall": 0.5315643079661772,
+          "f1-score": 0.4356396366676341,
+          "support": 15064.0
+        },
+        "weighted avg": {
+          "precision": 0.9893798162582563,
+          "recall": 0.7511285183218269,
+          "f1-score": 0.8528928002227132,
+          "support": 15064.0
+        }
+      },
+      "training_time_seconds": 0.514,
+      "balancing_strategy": "scale_pos_weight=0.005624 to balance class penalty",
+      "model_path": "C:\\Users\\EIS\\Downloads\\ML PROJECT\\churn-predict-main\\models\\xgboost.joblib"
+    }
+  }
+}

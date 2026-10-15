@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="comparison-page anim-fade-in">
+
+    <div class="comparison-header glass-card">
+        <div>
+            <h1>Model Comparison</h1>
+            <p class="subtitle">Evaluation results for all three trained classifiers on the Olist e-commerce dataset. Logistic Regression is used as the provisional default based on ROC-AUC and retained-customer recall.</p>
+        </div>
+        <div class="cmp-legend">
+            <span class="legend-dot lr"></span> Logistic Regression
+            <span class="legend-dot rf"></span> Random Forest
+            <span class="legend-dot xgb"></span> XGBoost
+        </div>
+    </div>
+
+    <!-- Loading / error state -->
+    <div id="cmp-loading" class="glass-card" style="text-align:center; padding:3rem;">
+        <div class="loader-spinner" style="margin:0 auto 1rem;"></div>
+        <p>Loading evaluation metrics…</p>
+    </div>
+    <div id="cmp-error" class="glass-card" style="display:none; text-align:center; padding:3rem; border:1px solid var(--danger);">
+        <p style="color:var(--danger);">⚠ Could not load model metrics. Ensure <code>train_model.py</code> has been run and <code>model_metrics.json</code> exists.</p>
+    </div>
+
+    <!-- KPI bar -->
+    <div id="cmp-kpi-grid" class="cmp-kpi-grid" style="display:none;"></div>
+
+    <!-- Main metric tables -->
+    <div id="cmp-tables" class="cmp-tables" style="display:none;">
+
+        <!-- Classification report -->
+        <div class="glass-card cmp-section">
+            <h2>Classification Metrics</h2>
+            <p class="section-note">All values are on the held-out test set. Balanced class weights were used for Logistic Regression and Random Forest; <code>scale_pos_weight</code> for XGBoost.</p>
+            <div class="table-scroll">
+                <table class="cmp-table" id="tbl-classification">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th class="lr-col">Logistic Regression</th>
+                            <th class="rf-col">Random Forest</th>
+                            <th class="xgb-col">XGBoost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-classification"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Per-class breakdown -->
+        <div class="glass-card cmp-section">
+            <h2>Class-level Precision &amp; Recall</h2>
+            <p class="section-note">Class 0 = Retained customer; Class 1 = Churned customer. Recall for class 0 is particularly diagnostic given extreme class imbalance (≈ 0.6 % retained).</p>
+            <div class="table-scroll">
+                <table class="cmp-table" id="tbl-class">
+                    <thead>
+                        <tr>
+                            <th>Class / Metric</th>
+                            <th class="lr-col">Logistic Regression</th>
+                            <th class="rf-col">Random Forest</th>
+                            <th class="xgb-col">XGBoost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-class"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Confusion matrices -->
+        <div class="glass-card cmp-section">
+            <h2>Confusion Matrices</h2>
+            <p class="section-note">Rows = actual class, columns = predicted class. TN / FP / FN / TP layout.</p>
+            <div id="confusion-matrices" class="cm-grid"></div>
+        </div>
+
+        <!-- Training time / misc -->
+        <div class="glass-card cmp-section">
+            <h2>Training Characteristics</h2>
+            <div class="table-scroll">
+                <table class="cmp-table" id="tbl-meta">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th class="lr-col">Logistic Regression</th>
+                            <th class="rf-col">Random Forest</th>
+                            <th class="xgb-col">XGBoost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-meta"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bar chart comparison -->
+    <div id="cmp-chart-section" class="glass-card cmp-section" style="display:none;">
+        <h2>Visual Metric Comparison</h2>
+        <div class="chart-container" style="height:340px; position:relative;">
+            <canvas id="cmp-bar-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="cmp-footer glass-card" id="cmp-footer" style="display:none;">
+        <p>⚠ <strong>Note on class imbalance:</strong> The Olist dataset contains ≈ 99.4 % churned customers. High accuracy scores are misleading — examine ROC-AUC, Precision-Recall AUC, and per-class recall when selecting a model.</p>
+        <a href="/predict_ui" class="btn-primary" style="display:inline-block; margin-top:1rem;">Open Predict Page →</a>
+    </div>
+
+</div>
+
+<style>
+/* ---- Page layout ---- */
+.comparison-page { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.comparison-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; padding: 1.8rem 2rem; }
+.comparison-header h1 { font-size: 1.8rem; margin: 0 0 0.4rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.9rem; max-width: 640px; line-height: 1.6; }
+.cmp-legend { display: flex; align-items: center; gap: 0.8rem; font-size: 0.88rem; color: var(--text-secondary); white-space: nowrap; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 2px; }
+.legend-dot.lr  { background: #6366f1; }
+.legend-dot.rf  { background: #10b981; }
+.legend-dot.xgb { background: #f59e0b; }
+
+/* ---- KPI grid ---- */
+.cmp-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.kpi-card { background: var(--glass-bg); border: 1px solid var(--border-light); border-radius: 14px; padding: 1.4rem 1.6rem; }
+.kpi-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.kpi-values { display: flex; flex-direction: column; gap: 0.25rem; }
+.kpi-val { display: flex; justify-content: space-between; font-size: 0.92rem; }
+.kpi-val .kv-name { color: var(--text-secondary); }
+.kpi-val .kv-num { font-weight: 700; }
+.kv-num.best { color: #10b981; }
+
+/* ---- Section ---- */
+.cmp-section { padding: 1.8rem 2rem; }
+.cmp-section h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+.section-note { color: var(--text-secondary); font-size: 0.83rem; margin-bottom: 1.2rem; line-height: 1.5; }
+.table-scroll { overflow-x: auto; }
+
+/* ---- Tables ---- */
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.cmp-table th { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.cmp-table td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table tr:hover td { background: rgba(255,255,255,0.03); }
+.lr-col  { color: #a5b4fc !important; }
+.rf-col  { color: #6ee7b7 !important; }
+.xgb-col { color: #fcd34d !important; }
+.td-best { color: #10b981 !important; font-weight: 700; }
+
+/* ---- Confusion Matrices ---- */
+.cm-grid { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-top: 0.5rem; }
+.cm-card { text-align: center; }
+.cm-card h4 { margin-bottom: 0.8rem; font-size: 0.9rem; }
+.cm-matrix { display: inline-grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr 1fr; gap: 4px; font-size: 0.82rem; }
+.cm-matrix .cm-cell { padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; min-width: 70px; text-align: center; }
+.cm-matrix .cm-header { background: transparent; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
+.cm-tn  { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+.cm-fp  { background: rgba(239,68,68,0.2);  color: #fca5a5; }
+.cm-fn  { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.cm-tp  { background: rgba(59,130,246,0.2); color: #93c5fd; }
+
+/* ---- Chart ---- */
+.cmp-tables { display: flex; flex-direction: column; gap: 1.5rem; }
+.chart-container canvas { border-radius: 10px; }
+
+/* ---- Footer ---- */
+.cmp-footer { padding: 1.4rem 2rem; border: 1px solid rgba(245,158,11,0.3); }
+.cmp-footer p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+</style>
+
+<script>
+(async function() {
+    const loading = document.getElementById('cmp-loading');
+    const errBox  = document.getElementById('cmp-error');
+    const kpiGrid = document.getElementById('cmp-kpi-grid');
+    const tables  = document.getElementById('cmp-tables');
+    const chartSec = document.getElementById('cmp-chart-section');
+    const footer  = document.getElementById('cmp-footer');
+
+    let metrics;
+    try {
+        const res = await fetch('/api/models-metrics');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        metrics = await res.json();
+        if (metrics.error) throw new Error(metrics.error);
+    } catch(e) {
+        loading.style.display = 'none';
+        errBox.style.display  = 'block';
+        console.error('Metrics fetch failed:', e);
+        return;
+    }
+
+    loading.style.display = 'none';
+    kpiGrid.style.display  = 'grid';
+    tables.style.display   = 'flex';
+    chartSec.style.display = 'block';
+    footer.style.display   = 'block';
+
+    const MODELS = [
+        { key: 'logistic_regression', label: 'Logistic Regression', col: 'lr-col' },
+        { key: 'random_forest',       label: 'Random Forest',       col: 'rf-col' },
+        { key: 'xgboost',             label: 'XGBoost',             col: 'xgb-col' },
+    ];
+
+    function fmt(v, digits=4) {
+        if (v === null || v === undefined) return '—';
+        if (typeof v === 'number') return v.toFixed(digits);
+        return v;
+    }
+
+    function pickBest(vals, higherIsBetter=true) {
+        const nums = vals.map(v => typeof v === 'number' ? v : NaN);
+        const valid = nums.filter(n => !isNaN(n));
+        if (!valid.length) return null;
+        return higherIsBetter ? Math.max(...valid) : Math.min(...valid);
+    }
+
+    function tdBest(val, best) {
+        const cls = (typeof val === 'number' && typeof best === 'number' && Math.abs(val - best) < 1e-9)
+            ? 'td-best' : '';
+        return `<td class="${cls}">${fmt(val)}</td>`;
+    }
+
+    // ---- Build KPI cards ----
+    const KPI_METRICS = [
+        { label: 'ROC-AUC',          key: 'roc_auc',           digits: 4, higher: true },
+        { label: 'PR-AUC',           key: 'average_precision',  digits: 4, higher: true },
+        { label: 'F1-Score (macro)', key: 'f1_macro',           digits: 4, higher: true },
+        { label: 'Accuracy',         key: 'accuracy',           digits: 4, higher: true },
+    ];
+    KPI_METRICS.forEach(km => {
+        const vals = MODELS.map(m => (metrics[m.key] || {})[km.key]);
+        const best = pickBest(vals, km.higher);
+        const card = document.createElement('div');
+        card.className = 'kpi-card';
+        card.innerHTML = `<div class="kpi-label">${km.label}</div><div class="kpi-values">${
+            MODELS.map((m, i) => {
+                const v = vals[i];
+                const isBest = typeof v === 'number' && typeof best === 'number' && Math.abs(v - best) < 1e-9;
+                return `<div class="kpi-val"><span class="kv-name ${m.col}">${m.label}</span><span class="kv-num${isBest ? ' best' : ''}">${fmt(v, km.digits)}</span></div>`;
+            }).join('')
+        }</div>`;
+        kpiGrid.appendChild(card);
+    });
+
+    // ---- Classification metrics table ----
+    const CLF_ROWS = [
+        { label: 'Accuracy',              key: 'accuracy',          higher: true },
+        { label: 'Precision (macro)',      key: 'precision_macro',   higher: true },
+        { label: 'Recall (macro)',         key: 'recall_macro',      higher: true },
+        { label: 'F1-Score (macro)',       key: 'f1_macro',          higher: true },
+        { label: 'Precision (weighted)',   key: 'precision_weighted',higher: true },
+        { label: 'Recall (weighted)',      key: 'recall_weighted',   higher: true },
+        { label: 'F1-Score (weighted)',    key: 'f1_weighted',       higher: true },
+        { label: 'ROC-AUC',               key: 'roc_auc',           higher: true },
+        { label: 'Average Precision (PR-AUC)', key: 'average_precision', higher: true },
+    ];
+    const tbodyCLF = document.getElementById('tbody-classification');
+    CLF_ROWS.forEach(row => {
+        const vals = MODELS.map(m => (metrics[m.key] || {})[row.key]);
+        const best = pickBest(vals, row.higher);
+        tbodyCLF.innerHTML += `<tr><td>${row.label}</td>${MODELS.map((m,i) => tdBest(vals[i], best)).join('')}</tr>`;
+    });
+
+    // ---- Class-level table ----
+    const CLASS_ROWS = [
+        { label: 'Precision — Retained (0)', base: 'class_0', key: 'precision', higher: true },
+        { label: 'Recall — Retained (0)',    base: 'class_0', key: 'recall',    higher: true },
+        { label: 'F1 — Retained (0)',        base: 'class_0', key: 'f1',        higher: true },
+        { label: 'Precision — Churned (1)',  base: 'class_1', key: 'precision', higher: true },
+        { label: 'Recall — Churned (1)',     base: 'class_1', key: 'recall',    higher: true },
+        { label: 'F1 — Churned (1)',         base: 'class_1', key: 'f1',        higher: true },
+        { label: 'Support — Retained (0)',   base: 'class_0', key: 'support',   higher: false },
+        { label: 'Support — Churned (1)',    base: 'class_1', key: 'support',   higher: false },
+    ];
+    const tbodyCLS = document.getElementById('tbody-class');
+    CLASS_ROWS.forEach(row => {
+        const vals = MODELS.map(m => {
+            const mdata = metrics[m.key] || {};
+            return (mdata[row.base] || {})[row.key];
+        });
+        const skipBest = row.key === 'support';
+        const best = skipBest ? null : pickBest(vals, row.higher);
+        tbodyCLS.innerHTML += `<tr><td>${row.label}</td>${MODELS.map((m,i) => skipBest ? `<td>${fmt(vals[i], 0)}</td>` : tdBest(vals[i], best)).join('')}</tr>`;
+    });
+
+    // ---- Confusion matrices ----
+    const cmGrid = document.getElementById('confusion-matrices');
+    MODELS.forEach(m => {
+        const cm = (metrics[m.key] || {}).confusion_matrix;
+        if (!cm) return;
+        const [[tn, fp],[fn, tp]] = cm;
+        cmGrid.innerHTML += `
+        <div class="cm-card">
+            <h4>${m.label}</h4>
+            <div class="cm-matrix">
+                <div class="cm-header"></div>
+                <div class="cm-header">Pred 0</div>
+                <div class="cm-header">Pred 1</div>
+                <div class="cm-header">Actual 0</div>
+                <div class="cm-cell cm-tn">TN ${tn.toLocaleString()}</div>
+                <div class="cm-cell cm-fp">FP ${fp.toLocaleString()}</div>
+                <div class="cm-header">Actual 1</div>
+                <div class="cm-cell cm-fn">FN ${fn.toLocaleString()}</div>
+                <div class="cm-cell cm-tp">TP ${tp.toLocaleString()}</div>
+            </div>
+        </div>`;
+    });
+
+    // ---- Training meta table ----
+    const META_ROWS = [
+        { label: 'Training Time (s)', key: 'training_time_seconds', digits: 3, higher: false },
+        { label: 'Test Set Size',     key: 'test_set_size',         digits: 0 },
+        { label: 'Train Set Size',    key: 'train_set_size',        digits: 0 },
+    ];
+    const tbodyMeta = document.getElementById('tbody-meta');
+    META_ROWS.forEach(row => {
+        const vals = MODELS.map(m => (metrics[m.key] || {})[row.key]);
+        const best = row.higher !== undefined ? pickBest(vals, row.higher) : null;
+        tbodyMeta.innerHTML += `<tr><td>${row.label}</td>${MODELS.map((m,i) => {
+            const v = vals[i];
+            if (v === null || v === undefined) return '<td>—</td>';
+            if (best !== null) return tdBest(v, best);
+            return `<td>${typeof v === 'number' ? v.toFixed(row.digits || 0) : v}</td>`;
+        }).join('')}</tr>`;
+    });
+
+    // ---- Bar chart ----
+    const chartKeys = ['roc_auc', 'average_precision', 'f1_macro', 'accuracy'];
+    const chartLabels = ['ROC-AUC', 'PR-AUC', 'F1-Macro', 'Accuracy'];
+    const colors = ['rgba(99,102,241,0.8)', 'rgba(16,185,129,0.8)', 'rgba(245,158,11,0.8)'];
+    const datasets = MODELS.map((m, i) => ({
+        label: m.label,
+        data: chartKeys.map(k => {
+            const v = (metrics[m.key] || {})[k];
+            return typeof v === 'number' ? parseFloat(v.toFixed(4)) : 0;
+        }),
+        backgroundColor: colors[i],
+        borderRadius: 6,
+        borderSkipped: false,
+    }));
+
+    new Chart(document.getElementById('cmp-bar-chart'), {
+        type: 'bar',
+        data: { labels: chartLabels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { color: '#94a3b8', font: { family: 'Inter' } } },
+                tooltip: {
+                    callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)}` }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                y: {
+                    min: 0, max: 1,
+                    ticks: { color: '#94a3b8', stepSize: 0.1 },
+                    grid: { color: 'rgba(255,255,255,0.06)' }
+                }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

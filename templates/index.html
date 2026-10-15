@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ============================================================
+     HERO SECTION
+     ============================================================ -->
+<section class="hero-section anim-fade-in">
+    <div class="hero-eyebrow">E-Commerce Intelligence &middot; Powered by AI</div>
+    <h1 class="hero-title">
+        <span class="title-line-one">Customer Drop-off,</span>
+        <span class="title-line-two">Predicted Before It Pays.</span>
+    </h1>
+    <h2 class="hero-subtitle">Understand your customers. Predict their next move. Retain more revenue.</h2>
+    <p class="hero-desc">
+        NexIQ combines RFM behavioral signals with a trained machine-learning pipeline to give you
+        real-time churn risk scores, actionable retention advice, and a living analytics dashboard —
+        all in one elegant platform.
+    </p>
+    <div class="hero-cta-group">
+        <a href="/predict_ui" class="btn-primary cta-btn">Start Analysis &rarr;</a>
+        <a href="/dashboard" class="btn-secondary cta-btn">View Dashboard</a>
+    </div>
+</section>
+
+<!-- ============================================================
+     HOW IT WORKS
+     ============================================================ -->
+<section class="how-it-works">
+    <p class="section-eyebrow">Platform Overview</p>
+    <h3 class="section-title how-it-works-title">How It Works</h3>
+    <p class="section-subtitle">
+        Three intelligent steps turn raw customer behaviour into revenue-protecting decisions.
+    </p>
+
+    <div class="cards-layout hiw-grid">
+        <!-- Step 01 -->
+        <div class="card glass-card hiw-card">
+            <div class="step-num">01</div>
+            <h4 class="hiw-card-heading">Input Customer Behaviour</h4>
+            <p class="hiw-card-body">
+                Enter key RFM (Recency, Frequency, Monetary) metrics for any customer alongside
+                behavioural signals like category diversity and purchase count.
+                The form accepts individual data entry or bulk JSON import, making it flexible
+                for both quick spot-checks and batch analysis workflows.
+            </p>
+            <ul class="hiw-card-bullets">
+                <li>Days since last purchase (Recency)</li>
+                <li>Total number of orders (Frequency)</li>
+                <li>Total lifetime spend (Monetary value)</li>
+                <li>Product category spread &amp; diversity score</li>
+            </ul>
+        </div>
+
+        <!-- Step 02 -->
+        <div class="card glass-card hiw-card">
+            <div class="step-num">02</div>
+            <h4 class="hiw-card-heading">AI Analyses Hidden Patterns</h4>
+            <p class="hiw-card-body">
+                The moment you submit, NexIQ's Logistic Regression pipeline — trained on
+                thousands of real Olist e-commerce transactions — scores every signal
+                against learned drop-off patterns. The model normalises inputs, weights
+                each feature, and outputs a calibrated probability within milliseconds.
+            </p>
+            <ul class="hiw-card-bullets">
+                <li>Pre-trained sklearn pipeline with StandardScaler</li>
+                <li>Calibrated probability output (0 – 100 %)</li>
+                <li>Instant, server-side inference with no latency</li>
+                <li>Feature importance traced back to your inputs</li>
+            </ul>
+        </div>
+
+        <!-- Step 03 -->
+        <div class="card glass-card hiw-card">
+            <div class="step-num">03</div>
+            <h4 class="hiw-card-heading">Get Risk Score + Retention Actions</h4>
+            <p class="hiw-card-body">
+                Results are returned as a clear risk tier — <strong>Low</strong>,
+                <strong>Medium</strong>, or <strong>High</strong> — with a visual gauge,
+                a health score bar, and AI-generated recommendations tailored to the
+                customer's specific behavioural profile. Every prediction is persisted
+                to the dashboard for trend analysis over time.
+            </p>
+            <ul class="hiw-card-bullets">
+                <li>Visual churn-risk gauge (0 – 100 %)</li>
+                <li>Colour-coded risk badge (Low / Medium / High)</li>
+                <li>Personalised re-engagement action list</li>
+                <li>All predictions stored for dashboard analytics</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     HOW TO USE IT  (NEW SECTION)
+     ============================================================ -->
+<section class="how-to-use">
+    <p class="section-eyebrow">Getting Started</p>
+    <h3 class="section-title htu-title">How to Use It</h3>
+    <p class="section-subtitle">
+        Follow these four steps to go from raw customer data to a clear, actionable churn decision.
+    </p>
+
+    <div class="htu-steps">
+
+        <!-- Step A -->
+        <div class="htu-step glass-card">
+            <div class="htu-step-icon">&#9312;</div>
+            <div class="htu-step-content">
+                <h4 class="htu-step-heading">Navigate to the Predict Page</h4>
+                <p class="htu-step-body">
+                    Click <strong>Predict</strong> in the top navigation bar or hit the
+                    <em>Start Analysis</em> button on this page. You will land on the
+                    prediction form where you can enter a single customer's details.
+                </p>
+            </div>
+        </div>
+
+        <!-- Step B -->
+        <div class="htu-step glass-card">
+            <div class="htu-step-icon">&#9313;</div>
+            <div class="htu-step-content">
+                <h4 class="htu-step-heading">Fill in the Customer Fields</h4>
+                <p class="htu-step-body">
+                    Enter the required fields: <strong>Recency</strong> (days since last order),
+                    <strong>Frequency</strong> (total number of orders),
+                    <strong>Monetary Value</strong> (total lifetime spend in BRL),
+                    <strong>Category Diversity</strong> (unique product categories purchased),
+                    and <strong>Purchase Count</strong>. All fields are validated in real time —
+                    red borders indicate invalid input, green borders confirm correct data.
+                </p>
+                <p class="htu-step-tip">
+                    💡 <em>Tip:</em> Use a Recency of 90–120+ to simulate dormant customers
+                    who are most likely to churn.
+                </p>
+            </div>
+        </div>
+
+        <!-- Step C -->
+        <div class="htu-step glass-card">
+            <div class="htu-step-icon">&#9314;</div>
+            <div class="htu-step-content">
+                <h4 class="htu-step-heading">Submit &amp; Read the Risk Output</h4>
+                <p class="htu-step-body">
+                    Press <strong>Run Prediction</strong>. The right panel will animate and reveal:
+                </p>
+                <ul class="htu-step-list">
+                    <li><strong>Risk Gauge:</strong> A circular meter showing churn probability as a percentage.</li>
+                    <li><strong>Risk Badge:</strong> Colour-coded label — green (Low), amber (Medium), red (High).</li>
+                    <li><strong>Health Score Bar:</strong> An inverse measure of customer retention health.</li>
+                    <li><strong>Key Insight:</strong> A plain-language summary of what the score means.</li>
+                    <li><strong>Recommended Actions:</strong> Specific steps your team can take to retain this customer.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step D -->
+        <div class="htu-step glass-card">
+            <div class="htu-step-icon">&#9315;</div>
+            <div class="htu-step-content">
+                <h4 class="htu-step-heading">Monitor Trends on the Dashboard</h4>
+                <p class="htu-step-body">
+                    Every prediction you run is automatically saved. Head to the
+                    <strong>Dashboard</strong> to see aggregate KPIs, a risk-distribution
+                    donut chart, a recency trend line, and a searchable table of all
+                    historical predictions. Use the filter controls to isolate High-risk
+                    customers and export the data as CSV for your CRM team.
+                </p>
+                <p class="htu-step-tip">
+                    💡 <em>Tip:</em> Run 10+ predictions to populate the trend charts and
+                    unlock the full power of the analytics view.
+                </p>
+            </div>
+        </div>
+
+    </div><!-- /htu-steps -->
+</section>
+
+<!-- ============================================================
+     WHO CAN USE THIS
+     ============================================================ -->
+<section class="who-can-use">
+    <h3 class="section-title">Who Can Use This</h3>
+    <div class="use-cases cards-layout">
+        <div class="card glass-card">
+            <h4>E-commerce Stores</h4>
+            <p>For large catalogues like marketplaces looking to retain high-value repeat buyers before they go dormant.</p>
+        </div>
+        <div class="card glass-card">
+            <h4>D2C Brands</h4>
+            <p>Protect subscriber lifetime value and repeat purchase frequency with early churn signals.</p>
+        </div>
+        <div class="card glass-card">
+            <h4>Subscription Apps</h4>
+            <p>Minimise active subscriber decay with preemptive, personalised engagement powered by AI.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     PREMIUM FEATURES
+     ============================================================ -->
+<section class="features">
+    <h3 class="section-title">Premium Features</h3>
+    <div class="cards-layout">
+        <div class="card glass-card feature-card">&#128200; Churn Prediction</div>
+        <div class="card glass-card feature-card">&#9888; Risk Segmentation</div>
+        <div class="card glass-card feature-card">&#128101; Customer Insights</div>
+        <div class="card glass-card feature-card">&#128181; Revenue Protection</div>
+    </div>
+</section>
+
+{% endblock %}

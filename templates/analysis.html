@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block page_title %}Model Analysis{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">Feature Importance</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Understanding which factors impact customer churn the most. Higher values indicate a stronger influence on the model's decision.
+    </p>
+
+    <!-- Synthetic layout for feature importance bars -->
+    <div style="margin-top: 1.5rem;">
+        <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span style="font-weight: 500; font-size: 0.9rem;">Tenure</span>
+                <span style="font-size: 0.9rem; color: var(--text-muted);">0.45</span>
+            </div>
+            <div style="width: 100%; background-color: var(--border-color); border-radius: 999px; height: 8px;">
+                <div style="width: 45%; background-color: var(--accent-color); border-radius: 999px; height: 8px;"></div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span style="font-weight: 500; font-size: 0.9rem;">Monthly Charges</span>
+                <span style="font-size: 0.9rem; color: var(--text-muted);">0.32</span>
+            </div>
+            <div style="width: 100%; background-color: var(--border-color); border-radius: 999px; height: 8px;">
+                <div style="width: 32%; background-color: var(--accent-color); border-radius: 999px; height: 8px;"></div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span style="font-weight: 500; font-size: 0.9rem;">Total Charges</span>
+                <span style="font-size: 0.9rem; color: var(--text-muted);">0.23</span>
+            </div>
+            <div style="width: 100%; background-color: var(--border-color); border-radius: 999px; height: 8px;">
+                <div style="width: 23%; background-color: var(--accent-color); border-radius: 999px; height: 8px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="predict-layout">
+    <div class="card">
+        <h2 class="card-title">Confusion Matrix Summary</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            How often the Logistic Regression model predicts correctly across the test dataset.
+        </p>
+
+        <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr>
+                    <td style="border: none;"></td>
+                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border-color);">Predicted: No</th>
+                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border-color);">Predicted: Yes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="padding: 1rem; font-weight: 600; border-right: 2px solid var(--border-color); color: var(--text-muted);">Actual: No</th>
+                    <td style="padding: 1rem; background-color: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; font-size: 1.25rem;">1,420 (TN)</td>
+                    <td style="padding: 1rem; background-color: rgba(239, 68, 68, 0.1); color: var(--danger); font-weight: 700; font-size: 1.25rem;">145 (FP)</td>
+                </tr>
+                <tr>
+                    <th style="padding: 1rem; font-weight: 600; border-right: 2px solid var(--border-color); color: var(--text-muted);">Actual: Yes</th>
+                    <td style="padding: 1rem; background-color: rgba(245, 158, 11, 0.1); color: var(--warning); font-weight: 700; font-size: 1.25rem;">210 (FN)</td>
+                    <td style="padding: 1rem; background-color: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; font-size: 1.25rem;">325 (TP)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Model Performance Metrics</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+            <div class="kpi-card" style="padding: 1rem; border-color: var(--border-color);">
+                <div class="kpi-title">Accuracy</div>
+                <div class="kpi-value">83.1%</div>
+                <div class="alert-desc" style="margin-top: 0.5rem;">How many total predictions were correct. Highest reliability for balanced datasets.</div>
+            </div>
+            <div class="kpi-card" style="padding: 1rem; border-color: var(--border-color);">
+                <div class="kpi-title">Precision</div>
+                <div class="kpi-value" style="color: var(--success)">69.1%</div>
+                <div class="alert-desc" style="margin-top: 0.5rem;">The reliability of "Yes" predictions. Essential to avoid upsetting loyal customers.</div>
+            </div>
+            <div class="kpi-card" style="padding: 1rem; border-color: var(--border-color);">
+                <div class="kpi-title">Recall</div>
+                <div class="kpi-value" style="color: var(--warning)">60.7%</div>
+                <div class="alert-desc" style="margin-top: 0.5rem;">Ability to catch all churning customers. High recall prevents revenue leakage.</div>
+            </div>
+            <div class="kpi-card" style="padding: 1rem; border-color: var(--border-color);">
+                <div class="kpi-title">F1-Score</div>
+                <div class="kpi-value">64.6%</div>
+                <div class="alert-desc" style="margin-top: 0.5rem;">Harmonic mean of Precision and Recall. The best single metric for this model.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

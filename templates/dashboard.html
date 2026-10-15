@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dashboard-container anim-fade-in">
+    <div class="dashboard-header">
+        <h2 class="section-title" style="margin-bottom: 0;">Analytics Overview</h2>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button id="btn-refresh-dashboard" class="btn-secondary" style="display: flex; align-items: center; gap: 6px; padding: 0.6rem 1.1rem; font-size: 0.88rem;">
+                <span id="refresh-icon">🔄</span> Refresh Data
+            </button>
+            <button onclick="resetCompanyData()" class="btn-export" style="background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3);">
+                ⚠️ Reset Company Data
+            </button>
+            <a href="/export" id="btn-export" class="btn-export" title="Download all predictions as CSV">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
+                    style="margin-right:6px;vertical-align:-2px;">
+                    <path
+                        d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path
+                        d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                </svg>
+                Download CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="executive-summary glass-card">
+        <div class="exec-icon">📊</div>
+        <div>
+            <h3 style="margin-bottom: 0.4rem; color: var(--primary);">Executive Summary</h3>
+            <p id="exec-summary-text" style="font-size: 1.05rem; color: var(--text-secondary);">Loading intelligence summary...</p>
+        </div>
+    </div>
+
+    <!-- KPI Cards (Restored Original 4 Cards) -->
+    <div class="kpi-cards">
+        <div class="kpi-card glass-card" data-tooltip="Total predictions made across all sessions">
+            <div class="kpi-icon">👥</div>
+            <h4>Total Customers</h4>
+            <p id="kpi-total" class="kpi-value">0</p>
+            <span class="kpi-label">All time</span>
+        </div>
+        <div class="kpi-card glass-card" data-tooltip="Customers with churn probability above 70%">
+            <div class="kpi-icon">🚨</div>
+            <h4>High Risk</h4>
+            <p id="kpi-high-risk" class="kpi-value danger">0</p>
+            <span class="kpi-label">Needs attention</span>
+        </div>
+        <div class="kpi-card glass-card" data-tooltip="Sum of (monetary × probability) across all customers">
+            <div class="kpi-icon">💸</div>
+            <h4>Revenue at Risk</h4>
+            <p id="kpi-rev-risk" class="kpi-value warning">$0</p>
+            <span class="kpi-label">Potential loss</span>
+        </div>
+        <div class="kpi-card glass-card" data-tooltip="Average churn probability across all records">
+            <div class="kpi-icon">📈</div>
+            <h4>Avg Risk Score</h4>
+            <p id="kpi-avg-risk" class="kpi-value">0%</p>
+            <span class="kpi-label">Platform average</span>
+        </div>
+    </div>
+
+    <!-- Alerts Panel -->
+    <div class="alerts-panel glass-card">
+        <div class="alerts-header">
+            <h3>⚠️ Active System Alerts</h3>
+            <span id="alerts-count" class="alert-count-badge">0</span>
+        </div>
+        <div id="alerts-list" class="alerts-grid">
+            <p style="color:var(--text-secondary);">Loading alerts...</p>
+        </div>
+    </div>
+
+    <!-- Charts (Restored Original Layout) -->
+    <div class="charts-layout">
+        <div class="chart-container glass-card">
+            <h4>Risk Distribution</h4>
+            <canvas id="riskDistChart"></canvas>
+        </div>
+        <div class="chart-container glass-card">
+            <h4>Spend vs Churn Probability</h4>
+            <canvas id="spendChurnChart"></canvas>
+        </div>
+    </div>
+
+    <div class="charts-layout single">
+        <div class="chart-container glass-card">
+            <h4>Prediction Activity Trend</h4>
+            <canvas id="activityTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Table with Controls -->
+    <div class="table-container glass-card">
+        <div class="table-header-row">
+            <h3>Priority Queue</h3>
+            <div class="table-controls">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                        fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
+                    </svg>
+                    <input type="text" id="searchInput" class="table-search" placeholder="Search by Customer ID...">
+                </div>
+                <select id="filterRisk" class="table-filter">
+                    <option value="">All Risk Levels</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+                <select id="filterPriority" class="table-filter">
+                    <option value="">All Priorities</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Important">Important</option>
+                    <option value="Monitor">Monitor</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="customer-table" class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Recency</th>
+                        <th>Monetary</th>
+                        <th>Risk Score</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-table-body">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+            <div id="no-data-msg" class="no-data-msg" style="display:none;">
+                <span>🔍</span>
+                <p>No customers found matching your filters.</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+            <span id="pagination-info" class="pagination-info">Showing 0 of 0</span>
+            <div class="pagination-btns">
+                <button id="btn-prev" class="btn-page" disabled>← Prev</button>
+                <span id="page-indicator" class="page-indicator">Page 1</span>
+                <button id="btn-next" class="btn-page">Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Side Panel for details -->
+<div id="side-panel" class="side-panel">
+    <button id="close-panel" class="btn-close">×</button>
+    <h3 style="margin-top: 0.5rem;">Customer Details</h3>
+    <div id="panel-content"></div>
+</div>
+<div id="panel-overlay" class="panel-overlay"></div>
+{% endblock %}

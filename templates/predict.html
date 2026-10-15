@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="predict-container anim-fade-in">
+    <div class="form-panel glass-card">
+        <h2>Risk Prediction Engine</h2>
+        <div class="form-actions">
+            <button id="btn-autofill" class="btn-secondary">Autofill Sample</button>
+            <button id="btn-paste-json" class="btn-secondary">Paste JSON</button>
+            <textarea id="json-input" placeholder='Paste JSON e.g. {"recency": 10, ...}' style="display:none;"></textarea>
+            <button id="btn-parse-json" style="display:none;" class="btn-primary">Apply JSON</button>
+        </div>
+
+        <form id="predict-form" class="premium-form">
+            <div class="input-grid">
+                <div class="form-group">
+                    <label>Recency (Days)</label>
+                    <input type="number" id="recency" name="recency" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Frequency (Orders)</label>
+                    <input type="number" id="frequency" name="frequency" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Monetary (Spend $)</label>
+                    <input type="number" id="monetary" name="monetary" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Avg Order Value ($)</label>
+                    <input type="number" id="average_order_value" name="average_order_value" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Category Diversity</label>
+                    <input type="number" id="category_diversity" name="category_diversity" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Avg Review Score</label>
+                    <input type="number" id="average_review_score" name="average_review_score" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Count</label>
+                    <input type="number" id="payment_count" name="payment_count" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Delivery Delay (Days)</label>
+                    <input type="number" id="delivery_delay" name="delivery_delay" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Inactivity Days</label>
+                    <input type="number" id="inactivity_days" name="inactivity_days" step="any" required>
+                </div>
+            </div>
+
+            <!-- Model selector -->
+            <div class="form-group model-selector-row">
+                <label for="model_type">Prediction Model</label>
+                <select id="model_type" name="model_type" class="model-select">
+                    <option value="logistic_regression" selected>Logistic Regression (provisional default)</option>
+                    <option value="random_forest">Random Forest</option>
+                    <option value="xgboost">XGBoost</option>
+                </select>
+                <span class="model-hint">Logistic Regression is the provisional default (achieved highest ROC-AUC 0.6124 & retained recall 54.76% in evaluation). All three models are preserved for comparison.</span>
+            </div>
+
+            <button type="submit" class="btn-primary w-full" id="btn-predict">Analyze Risk Potential</button>
+        </form>
+    </div>
+
+    <!-- RESULT SECTION -->
+    <div id="result-section" class="result-panel glass-card" style="display: none;">
+        <h3>AI Analysis Result</h3>
+        <div class="result-details">
+            <div class="header-result">
+                <span>Customer ID: <strong id="res-cust-id"></strong></span>
+                <span class="badge" id="res-badge"></span>
+            </div>
+            <div class="result-meta-row">
+                <span class="result-meta-item">Predicted Class: <strong id="res-outcome"></strong></span>
+                <span class="result-meta-item">Model: <strong id="res-model-used"></strong></span>
+            </div>
+
+            <!-- Probability breakdown cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 0.8rem; text-align: center;">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #fca5a5; display: block; margin-bottom: 0.25rem;">P(Churn — Class 1)</span>
+                    <strong id="res-prob-churn-val" style="font-size: 1.3rem; color: #ef4444;">0%</strong>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 0.8rem; text-align: center;">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #6ee7b7; display: block; margin-bottom: 0.25rem;">P(Retained — Class 0)</span>
+                    <strong id="res-prob-retained-val" style="font-size: 1.3rem; color: #10b981;">0%</strong>
+                </div>
+            </div>
+
+            <div class="gauge-container">
+                <div class="circular-progress" id="circular-progress">
+                    <div class="inner-circle" id="res-prob-anim">0%</div>
+                </div>
+                <p>Churn Probability Score</p>
+            </div>
+
+            <!-- Churn vs Retention educational guide -->
+            <div class="glass-card sub-card" style="margin-bottom: 1rem; padding: 0.85rem 1rem; background: rgba(0,0,0,0.25); border-left: 3px solid var(--primary);">
+                <h5 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: #93c5fd; margin-bottom: 0.3rem;">Class Understanding: Churn vs Retention</h5>
+                <p style="font-size: 0.83rem; color: var(--text-secondary); line-height: 1.45; margin: 0;">
+                    <strong>Retained (Class 0):</strong> Customer places an order within the future 90-day prediction window.<br>
+                    <strong>Churned (Class 1):</strong> Customer exhibits no purchasing activity in the future 90 days.
+                </p>
+            </div>
+
+            <div class="health-bar-container">
+                <p>Health Score</p>
+                <div class="health-bar-bg">
+                    <div class="health-bar-fill" id="res-health-fill"></div>
+                </div>
+            </div>
+
+            <div class="insight-box glass-card sub-card">
+                <h4>AI Insights</h4>
+                <p id="res-insight"></p>
+            </div>
+
+            <div class="recommended-actions glass-card sub-card">
+                <h4>Recommended Actions</h4>
+                <ul id="res-actions"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

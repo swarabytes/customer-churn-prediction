@@ -1,0 +1,56 @@
+# Python environment & virtualenvs
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# SQLite Database files (generated / updated at runtime)
+database.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Large raw datasets (Keep repo lean for git push to Render)
+olist_raw/
+data/
+
+# Model artifacts note:
+# models/ directory contains logistic_regression.joblib, random_forest.joblib, xgboost.joblib
+# pipeline.pkl is the default pipeline fallback. These are required for Render prediction.
+# Uncomment below only if you host models externally (e.g. S3/GCS):
+# models/*.joblib
+# pipeline.pkl
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+.gemini/

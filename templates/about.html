@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block page_title %}About the Model{% endblock %}
+
+{% block content %}
+<div class="predict-layout">
+    <div class="card">
+        <h2 class="card-title">Model Architecture</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted); line-height: 1.6;">
+            This application uses a <strong>Logistic Regression</strong> machine learning model to predict customer churn. Logistic regression is a statistical method for analyzing a dataset in which there are one or more independent variables that determine an outcome.
+        </p>
+        <p style="margin-bottom: 1.5rem; color: var(--text-muted); line-height: 1.6;">
+            The outcome is measured with a dichotomous variable (in this case, whether the customer will Churn or Stay). It is particularly well-suited for binary classification tasks where understanding the probability and interpretability of feature weights is important.
+        </p>
+
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Pipeline Steps:</h3>
+        <ul style="padding-left: 1.5rem; color: var(--text-muted); line-height: 1.6;">
+            <li><strong>Data Extraction:</strong> Raw historical data loaded from CSV.</li>
+            <li><strong>Preprocessing:</strong> Missing values handled, categorical variables encoded.</li>
+            <li><strong>Scaling:</strong> StandardScaler applied to normalize continuous numerical features (tenure, monthly charges, total charges).</li>
+            <li><strong>Training:</strong> Model fit using <code>sklearn.linear_model.LogisticRegression</code>.</li>
+            <li><strong>Serialization:</strong> Model and scaler serialized via <code>pickle</code> for fast inference.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">System Stack</h2>
+        
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background-color: var(--bg-primary);">
+            <div style="font-size: 2rem; color: #4B8BBE;"><i class="fa-brands fa-python"></i></div>
+            <div>
+                <h4 style="margin: 0; font-size: 1rem;">Backend / Framework</h4>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Python 3, Flask, Scikit-Learn, Pandas</div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background-color: var(--bg-primary);">
+            <div style="font-size: 2rem; color: #E34F26;"><i class="fa-brands fa-html5"></i></div>
+            <div>
+                <h4 style="margin: 0; font-size: 1rem;">Frontend</h4>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">HTML5, Vanilla CSS3 (Custom Design System), JavaScript</div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 0.5rem; background-color: var(--bg-primary);">
+            <div style="font-size: 2rem; color: #003B57;"><i class="fa-solid fa-database"></i></div>
+            <div>
+                <h4 style="margin: 0; font-size: 1rem;">Storage</h4>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">SQLite (Local Relational Database)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="text-align: center; margin-top: 1rem; padding: 2rem;">
+    <h3 style="margin-bottom: 0.5rem;">Resume-Worthy ML Project</h3>
+    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 0.95rem;">
+        Developed as a portfolio piece demonstrating end-to-end data science capabilities—from data cleaning and model training to API deployment and premium frontend UI/UX design.
+    </p>
+</div>
+{% endblock %}
