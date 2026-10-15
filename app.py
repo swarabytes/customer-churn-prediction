@@ -232,13 +232,27 @@ def bulk_upload():
                         
                     health_score = round((1.0 - probability) * 100, 1)
                     
-                    action = "Standard engagement"
-                    if features['inactivity_days'] > 90:
-                        action = "Send re-engagement offer"
-                    elif features['monetary'] > 500 and probability > 0.7:
-                        action = "Direct VIP outreach"
-                    elif features['average_review_score'] < 3.0:
-                        action = "Customer support follow-up"
+                    if risk_level == "High":
+                        if features['monetary'] > 500:
+                            action = "Direct VIP outreach & retention incentive"
+                        elif features['inactivity_days'] > 60:
+                            action = "Send targeted win-back email campaign"
+                        elif features['average_review_score'] < 3.5:
+                            action = "Proactive customer success resolution call"
+                        elif features['frequency'] <= 1:
+                            action = "Deploy second-purchase incentive offer"
+                        else:
+                            action = "Immediate churn prevention intervention"
+                    elif risk_level == "Medium":
+                        if features['inactivity_days'] > 30:
+                            action = "Trigger re-engagement reminder"
+                        else:
+                            action = "Promotional campaign & product recommendation"
+                    else:
+                        if features['frequency'] >= 3:
+                            action = "Loyalty rewards & referral invitation"
+                        else:
+                            action = "Standard customer engagement"
                         
                     db.insert_prediction(
                         company_id=company_id,
@@ -404,18 +418,43 @@ def predict():
         customer_id = f"CUST_{str(uuid.uuid4())[:8].upper()}"
         company_id = session['company_id']
 
-        # Insight + action logic (rule-based on feature values)
-        insight = "Customer shows stable purchasing behaviour."
-        action = "Standard engagement"
-        if features['inactivity_days'] > 90:
-            insight = "Customer has been inactive for an extended period."
-            action = "Send re-engagement offer"
-        elif features['monetary'] > 500 and prob_churn > 0.7:
-            insight = "High-value customer identified as at risk."
-            action = "Direct VIP outreach"
-        elif features['average_review_score'] < 3.0:
-            insight = "Poor review history — experience risk flagged."
-            action = "Customer support follow-up"
+        # Dynamic, coherent AI Insight and Action engine aligned directly with Risk Level and behavioral factors
+        actions_list = []
+        if risk_level == "High":
+            if features['monetary'] > 500:
+                insight = "High-value customer exhibiting high churn probability. Immediate retention required to avoid revenue loss."
+                actions_list = ["Assign dedicated VIP account manager", "Offer customized loyalty incentive or renewal discount"]
+            elif features['inactivity_days'] > 60 or features['recency'] > 60:
+                insight = f"Customer has been inactive for {int(features['inactivity_days'])} days, signaling imminent disengagement."
+                actions_list = ["Send targeted win-back email campaign with special discount", "Trigger automated re-engagement notification"]
+            elif features['average_review_score'] < 3.5:
+                insight = f"Critical experience dissatisfaction flagged (Average Review Score: {features['average_review_score']:.1f}/5.0)."
+                actions_list = ["Proactive customer success outreach to resolve complaints", "Offer service recovery credit"]
+            elif features['frequency'] <= 1:
+                insight = "One-time buyer with elevated churn probability. Customer has not developed repurchasing habits."
+                actions_list = ["Send onboarding sequence and second-purchase promotional coupon", "Recommend top popular items in customer's preferred category"]
+            else:
+                insight = f"High churn risk detected ({round(prob_churn * 100)}% probability) based on order cadence and spending trends."
+                actions_list = ["Deploy automated churn-prevention offer", "Engage customer via personalized notification"]
+        elif risk_level == "Medium":
+            if features['inactivity_days'] > 30:
+                insight = f"Customer inactivity ({int(features['inactivity_days'])} days) indicates early cooling-off period."
+                actions_list = ["Trigger gentle re-engagement reminder", "Highlight new arrivals and personalized recommendations"]
+            elif features['average_review_score'] < 4.0:
+                insight = "Moderate satisfaction level observed. Follow-up is recommended to improve retention."
+                actions_list = ["Request feedback survey to address pain points", "Provide small appreciation discount"]
+            else:
+                insight = f"Moderate churn risk ({round(prob_churn * 100)}% probability). Customer activity is slowing down."
+                actions_list = ["Send re-activation email sequence", "Monitor purchasing frequency over the next 30 days"]
+        else: # Low Risk
+            if features['frequency'] >= 3:
+                insight = "Highly loyal repeat customer showing strong purchasing momentum and high brand affinity."
+                actions_list = ["Enroll in VIP / Loyalty reward tier", "Invite to refer friends for mutual benefits"]
+            else:
+                insight = "Customer demonstrates healthy engagement and consistent retention behavior."
+                actions_list = ["Maintain standard communication and seasonal product updates", "Deliver high-touch service"]
+
+        action = actions_list[0] if actions_list else "Standard engagement"
 
         health_score = round((1.0 - prob_churn) * 100, 1)
 
@@ -440,7 +479,7 @@ def predict():
             "risk_level": risk_level,
             "health_score": health_score,
             "insight": insight,
-            "recommended_action": action,
+            "recommended_action": actions_list if actions_list else [action],
         }), 200
 
     except Exception as e:
