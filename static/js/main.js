@@ -519,25 +519,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const overlay = document.getElementById('panel-overlay');
         const content = document.getElementById('panel-content');
 
-        let insight = 'Customer shows stable purchasing behavior.';
-        let action = 'Continue standard engagement campaigns.';
+        let insight = 'Customer shows healthy retention patterns and stable purchasing behavior.';
+        let action = 'Maintain standard engagement and seasonal loyalty communications.';
 
-        if (data.inactivity_days > 90) {
-            insight = 'Customer inactive for long period → High churn risk.';
-            action = 'Send win-back email campaign with exclusive discount.';
-        } else if (data.monetary > 500 && data.probability > 0.7) {
-            insight = 'High value customer is at significant risk of leaving.';
-            action = 'Direct VIP outreach via dedicated account manager.';
-        } else if (data.average_review_score < 3.0) {
-            insight = 'Consistently poor reviews → Bad experience risk.';
-            action = 'Escalate to customer support for immediate resolution.';
+        if (data.risk_level === 'High') {
+            if (data.monetary > 500) {
+                insight = 'High-value customer identified at high churn risk. Immediate intervention needed to prevent revenue loss.';
+                action = 'Direct VIP outreach via dedicated account manager with renewal incentives.';
+            } else if (data.inactivity_days > 60 || data.recency > 60) {
+                insight = `Customer inactive for extended period (${Math.round(data.inactivity_days)} days) → High churn probability.`;
+                action = 'Send win-back email campaign with exclusive limited-time discount.';
+            } else if (data.average_review_score < 3.5) {
+                insight = 'Poor satisfaction and review scores → Significant experience dissatisfaction.';
+                action = 'Escalate to customer support for immediate resolution and service recovery credit.';
+            } else {
+                insight = `Elevated churn likelihood (${Math.round(data.probability * 100)}%) detected based on order cadence and spending history.`;
+                action = 'Deploy proactive churn-prevention campaign and personalized retention offer.';
+            }
         } else if (data.risk_level === 'Medium') {
-            insight = 'Moderate drop in engagement detected.';
-            action = 'Send personalized recommendations & loyalty reward.';
+            if (data.inactivity_days > 30) {
+                insight = `Moderate cooling-off period detected (${Math.round(data.inactivity_days)} days inactive).`;
+                action = 'Trigger friendly re-engagement reminder and highlight relevant new arrivals.';
+            } else {
+                insight = `Moderate churn risk detected (${Math.round(data.probability * 100)}%). Customer engagement is slowing.`;
+                action = 'Send personalized product recommendations and mid-tier loyalty rewards.';
+            }
+        } else {
+            // Low Risk
+            if (data.frequency >= 3) {
+                insight = `High brand affinity and strong repeat order cadence (${Math.round(data.frequency)} orders). Retention profile is optimal.`;
+                action = 'Enroll in VIP loyalty tier and invite to refer colleagues for benefits.';
+            } else {
+                insight = `Customer is active and engaged (${Math.round(data.probability * 100)}% churn risk). Demonstrates healthy retention characteristics.`;
+                action = 'Continue standard promotional messaging and high-touch customer support.';
+            }
         }
 
         const healthScore = Math.round((1 - data.probability) * 100);
         const riskColor = data.risk_level === 'High' ? 'var(--danger)' : data.risk_level === 'Medium' ? 'var(--warning)' : 'var(--success)';
+        const explanationBg = data.risk_level === 'High' ? 'rgba(239,68,68,0.1)' : data.risk_level === 'Medium' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)';
+        const explanationBorder = data.risk_level === 'High' ? 'var(--danger)' : data.risk_level === 'Medium' ? 'var(--warning)' : 'var(--success)';
+        const explanationTitle = data.risk_level === 'High' ? '⚡ High Risk Alert' : data.risk_level === 'Medium' ? '⚠️ Moderate Risk Notice' : '✨ Low Risk Assessment';
 
         content.innerHTML = `
             <div style="margin-top:1.2rem;">
@@ -559,12 +581,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="background:rgba(0,0,0,0.25); padding:1rem; border-radius:10px; text-align:center;">
                         <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block; margin-bottom:0.3rem;">Priority</span>
-                        <span class="badge ${data.priority === 'Critical' ? 'high' : data.priority === 'Important' ? 'medium' : 'low'}" style="display:inline-block;">${data.priority || 'Monitor'}</span>
+                        <span class="badge ${data.priority === 'Critical' ? 'high' : data.priority === 'Important' ? 'medium' : 'low'}" style="display:inline-block;">${data.priority || (data.risk_level === 'High' ? 'Critical' : data.risk_level === 'Medium' ? 'Important' : 'Monitor')}</span>
                     </div>
                 </div>
 
-                <div style="background:rgba(239,68,68,0.1); padding:1rem; border-radius:10px; border-left:3px solid var(--danger); margin-bottom:1rem;">
-                    <h5 style="color:var(--danger); margin-bottom:0.4rem; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.05em;">⚡ Risk Explanation</h5>
+                <div style="background:${explanationBg}; padding:1rem; border-radius:10px; border-left:3px solid ${explanationBorder}; margin-bottom:1rem;">
+                    <h5 style="color:${explanationBorder}; margin-bottom:0.4rem; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.05em;">${explanationTitle}</h5>
                     <p style="font-size:0.9rem; line-height:1.5;">${insight}</p>
                 </div>
                 <div style="background:rgba(16,185,129,0.1); padding:1rem; border-radius:10px; border-left:3px solid var(--success); margin-bottom:1.5rem;">
@@ -575,15 +597,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h5 style="border-bottom:1px solid var(--border-light); padding-bottom:0.6rem; margin-bottom:1rem; font-size:0.82rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Behavioral Metrics</h5>
                 <ul style="list-style:none; display:flex; flex-direction:column; gap:0.6rem;">
                     ${[
-                ['Recency', `${data.recency} days`],
-                ['Frequency', `${data.frequency} orders`],
-                ['Monetary Value', `$${Number(data.monetary).toLocaleString()}`],
-                ['Avg Order Value', `$${data.average_order_value}`],
-                ['Category Diversity', data.category_diversity],
-                ['Avg Review Score', `${data.average_review_score} / 5`],
-                ['Payment Count', data.payment_count],
-                ['Delivery Delay', `${data.delivery_delay} days`],
-                ['Inactivity Days', `${data.inactivity_days} days`],
+                ['Recency', `${Number(data.recency).toFixed(1)} days`],
+                ['Frequency', `${Math.round(data.frequency)} orders`],
+                ['Monetary Value', `$${Number(data.monetary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`],
+                ['Avg Order Value', `$${Number(data.average_order_value).toFixed(2)}`],
+                ['Category Diversity', Math.round(data.category_diversity)],
+                ['Avg Review Score', `${Number(data.average_review_score).toFixed(1)} / 5`],
+                ['Payment Count', Math.round(data.payment_count)],
+                ['Delivery Delay', `${Number(data.delivery_delay).toFixed(1)} days`],
+                ['Inactivity Days', `${Number(data.inactivity_days).toFixed(1)} days`],
             ].map(([label, val]) => `
                         <li style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
                             <span style="color:var(--text-secondary);">${label}</span>
